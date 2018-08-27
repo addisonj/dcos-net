@@ -100,11 +100,11 @@ unconfigured(info, LashupEvent = {lashup_kv_events, #{key := OverlayKey, value :
     {next_state, configuring, StateData2, {next_event, internal, EventContent}}.
 
 configuring(internal, Config, _StateData) ->
-    lager:debug("Applying configuration: ~p", [Config]),
+    lager:warning("Applying configuration: ~p", [Config]),
     dcos_overlay_configure:start_link(Config),
     keep_state_and_data;
 configuring(info, {dcos_overlay_configure, applied_config, AppliedConfig}, StateData0) ->
-    lager:debug("Done applying configuration: ~p", [AppliedConfig]),
+    lager:warning("Done applying configuration: ~p", [AppliedConfig]),
     StateData1 = maybe_update_state(StateData0),
     next_state_transition(StateData1);
 configuring(info, _EventContent, _StateData) ->
@@ -112,6 +112,7 @@ configuring(info, _EventContent, _StateData) ->
 
 batching(info, LashupEvent, StateData0) ->
     StateData1 = handle_lashup_event(LashupEvent, StateData0),
+    lager:warning("Got lashup event ~p", [LashupEvent]),
     {keep_state, StateData1, {timeout, ?BATCH_TIMEOUT, do_configure}};
 batching(timeout, do_configure, StateData0 = #data{config = Config}) ->
     {StateData1, Actions} = next_state_and_actions(Config, StateData0),
